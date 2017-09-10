@@ -54,6 +54,26 @@ app.delete('/todos/:id', (req, res) => {
     } else res.status(400).send({message: 'Todo id not valid'});
 });
 
+app.patch('/todos/:id', (req, res) => {
+    const body = {};
+    if(req.body.text) body.text = req.body.text;
+    if(req.body.completed) body.completed = req.body.completed;
+    if(ObjectId.isValid(req.params.id)) {
+        if(typeof body.completed === 'boolean' && body.completed) {
+            body.completedAt = new Date().getTime();
+        } else {
+            body.completed = false;
+            body.completedAt = null;
+        }
+        Todo.findByIdAndUpdate(req.params.id, {$set: body}, {new: true}).then(todo => {
+            if(!todo) res.status(404).send({message: 'Todo not found'});
+            res.send({todo});
+        }).catch(e => {
+            res.send(400).send({message: 'Todo id not valid'});
+        });
+    } else res.status(400).send({message: 'Todo id not valid'});
+});
+
 app.listen(port, () => {
     console.log(`Started on port ${port}`);
 });
