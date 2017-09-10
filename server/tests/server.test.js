@@ -10,7 +10,9 @@ const todos = [{
     text: 'First test todo'
 }, {
     _id: new ObjectId(),
-    text: 'Second text todo'
+    text: 'Second text todo',
+    completed: true,
+    completedAt: 123
 }];
 
 beforeEach(done => {
@@ -136,5 +138,57 @@ describe('DELETE /todos/:id', () => {
                 expect(res.body.message).toBe('Todo id not valid');
             })
             .end(done);
+    });
+});
+
+describe('PATCH /todos/:id', () => {
+    it('should update the todo', done => {
+        const updatedTodo = {
+            text: 'New test',
+            completed: true
+        }
+        request(app)
+            .patch('/todos/' + todos[0]._id.toHexString())
+            .send(updatedTodo)
+            .expect(200)
+            .expect(res => {
+                expect(res.body.todo.text).toBe(updatedTodo.text);
+                expect(res.body.todo.completed).toBe(true);
+                expect(res.body.todo.completedAt).toBeTruthy();
+            })
+            .end((err, res) => {
+                if(err) return done(err);
+                Todo.findById(todos[0]._id.toHexString()).then(todo => {
+                    expect(todo.text).toBe(updatedTodo.text);
+                    expect(todo.completed).toBe(true);
+                    expect(todo.completedAt).toBeTruthy();
+                    done();
+                }).catch(e => done(e));
+            });
+    });
+
+    it('should clear completedAt when todo is not completed', done => {
+        const updatedTodo = {
+            text: 'New test',
+            completed: false
+        }
+        request(app)
+            .patch('/todos/' + todos[1]._id.toHexString())
+            .send(updatedTodo)
+            .expect(200)
+            .expect(res => {
+                expect(res.body.todo.text).toBe(updatedTodo.text);
+                expect(res.body.todo.completed).toBe(false);
+                expect(res.body.todo.completedAt).toBeFalsy();
+            })
+            .end((err, res) => {
+                if(err) return done(err);
+                Todo.findById(todos[1]._id.toHexString()).then(todo => {
+                    expect(todo.text).toBe(updatedTodo.text);
+                    expect(todo.completed).toBe(false);
+                    expect(todo.completedAt).toBeFalsy();
+                    done();
+                }).catch(e => done(e));
+            });
     });
 });
