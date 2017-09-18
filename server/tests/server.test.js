@@ -4,6 +4,7 @@ const {ObjectId} = require('mongodb');
 
 const {app} = require('../server');
 const {Todo} = require('../models/todo');
+const {User} = require('../models/user');
 const {todos, populateTodos, users, populateUsers} = require('./seed/seed');
 
 beforeEach(populateUsers);
@@ -196,11 +197,61 @@ describe('GET /users/me', () => {
 
     it('should reuturn 401 id not authenticated', done => {
         request(app)
-            .get('users/me')
+            .get('/users/me')
             .expect(401)
             .expect(res => {
-                expect(res).toEqual({});
+                expect(res.body).toEqual({});
             })
+            .end(done);
+    });
+});
+
+describe('POST /users', () => {
+    it('should create an user', done => {
+        let email = 'example@gmail.com';
+        let password = '123abc!';
+
+        request(app)
+            .post('/users')
+            .send({email, password})
+            .expect(200)
+            .expect(res => {
+                expect(res.headers['x-auth']).toBeTruthy();
+                expect(res.body._id).toBeTruthy();
+                expect(res.body.email).toBe(email);
+            })
+            .end(err => {
+                if(err) {
+                   return done(err);   
+                }
+                
+                User.findOne({email}).then(user => {
+                    expect(user).toBeTruthy();
+                    // expect(user.password).toNotBe(password);
+                    done();
+                });
+            });
+    });
+
+    it('should return validation errors if request invalid', done => {
+        let email = 'example';
+        let password = '123abc!';
+
+        request(app)
+            .post('/users')
+            .send({email, password})
+            .expect(400)
+            .end(done);
+    });
+
+    it('should not create user if email in use', done => {
+        let email = users[0].email;
+        let password = '123abc!';
+
+        request(app)
+            .post('/users')
+            .send({email, password})
+            .expect(400)
             .end(done);
     });
 });
