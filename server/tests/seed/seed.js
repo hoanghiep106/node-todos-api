@@ -12,7 +12,7 @@ const users = [{
     password: 'hiep1234',
     tokens: [{
         access: 'auth',
-        token: jwt.sign({_id: userOneId, access: 'auth'}, 'secretvalue').toString()
+        token: jwt.sign({_id: userOneId, access: 'auth'}, process.env.JWT_SECRET).toString()
     }]
 }, {
     _id: userTwoId,
@@ -20,7 +20,7 @@ const users = [{
     password: 'someone1234',
     tokens: [{
         access: 'auth',
-        token: jwt.sign({_id: userTwoId, access: 'auth'}, 'secretvalue').toString()
+        token: jwt.sign({_id: userTwoId, access: 'auth'}, 'secretvalue', process.env.JWT_SECRET).toString()
     }]
 }];
 
